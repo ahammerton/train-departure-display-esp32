@@ -242,12 +242,12 @@ void drawUpdateProgress(int pct) {
 
 // ---- Screens ----------------------------------------------------------------
 
-// drawStartup: name, version, NRE attribution
+// drawStartup: name, version, data attribution
 void drawStartup() {
   drawCentred(dmBold, 0, "UK Train Departure Display");
   drawCentred(dmRegular, 12, "v" FW_VERSION);
-  drawCentred(dmBold, 24, "Powered by");
-  drawCentred(dmBold, 36, "National Rail Enquiries");
+  drawCentred(dmBold, 24, "Powered by National Rail Enquiries");
+  drawCentred(dmBold, 36, "via Rail Data Marketplace.");
 }
 
 // Setup hotspot instructions
