@@ -22,6 +22,7 @@ jobs:
 
       - name: Install arduino-cli, the ESP32 core and libraries
         run: |
+          mkdir -p "$HOME/bin"
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$HOME/bin" sh -s "$ARDUINO_CLI_VERSION"
           echo "$HOME/bin" >> "$GITHUB_PATH"
           export PATH="$HOME/bin:$PATH"
