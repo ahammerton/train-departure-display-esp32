@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.2 (2026-11-09)
+
+- The start-up screen now reads "Powered by National Rail Enquiries via Rail Data Marketplace."
+
 ## 0.7.1 (2026-11-09)
 
 First release of the ESP32-S3 port. It matches the features of the original Raspberry Pi app's 0.7.0. (The v0.7.0 tag was never released: its automated build failed.)
