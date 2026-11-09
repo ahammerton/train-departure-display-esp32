@@ -1,0 +1,95 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  ARDUINO_CLI_VERSION: 1.5.1
+  ESP32_CORE: esp32:esp32@3.3.12
+  FQBN: esp32:esp32:esp32s3:PartitionScheme=min_spiffs,PSRAM=enabled,USBMode=hwcdc,CDCOnBoot=cdc
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install arduino-cli, the ESP32 core and libraries
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$HOME/bin" sh -s "$ARDUINO_CLI_VERSION"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/bin:$PATH"
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install "$ESP32_CORE"
+          arduino-cli lib install "U8g2@2.36.19" "ArduinoJson@7.4.3"
+
+      # Release firmware has no Wi-Fi or API key, so it starts the setup hotspot
+      - name: Create blank secrets.h
+        run: |
+          cat > TrainDisplay/secrets.h <<'H'
+          #pragma once
+          #define WIFI_SSID        ""
+          #define WIFI_PASS        ""
+          #define RAILDATA_API_KEY ""
+          #define ADMIN_PASS       "change-me"
+          #define SETUP_AP_PASS    "train-setup"
+          H
+
+      - name: Compile
+        run: arduino-cli compile --fqbn "$FQBN" --output-dir build TrainDisplay
+
+      - name: Check the tag matches FW_VERSION
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          fw=$(sed -n 's/^#define FW_VERSION "\(.*\)"/\1/p' TrainDisplay/app.h)
+          [ "v$fw" = "$GITHUB_REF_NAME" ] || { echo "Tag $GITHUB_REF_NAME does not match FW_VERSION $fw"; exit 1; }
+
+      - name: Collect firmware
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          case "$GITHUB_REF" in refs/tags/v*) ;; *) v="${GITHUB_SHA::7}" ;; esac
+          mkdir dist
+          cp build/TrainDisplay.ino.merged.bin "dist/train-display-$v-full.bin"
+          cp build/TrainDisplay.ino.bin "dist/train-display-$v-update.bin"
+          (cd dist && sha256sum *.bin > SHA256SUMS)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: dist/
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') && github.repository_owner == 'ahammerton'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: firmware
+          path: dist
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" '$0 ~ "^## " v " " {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+          cat >> notes.md <<'N'
+
+          ### Files
+          - `train-display-*-full.bin`: flash over USB to a new board at address 0x0.
+          - `train-display-*-update.bin`: upload from the settings page (Firmware update) to update a running display.
+
+          See the README for flashing and first-time setup.
+          N
+          gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-file notes.md

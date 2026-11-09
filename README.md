@@ -40,6 +40,20 @@ A second display shares SCLK, SDIN, DC, RST and power with the first. Only its C
 
 Turn on "Second display" on the settings page and, if you want, give it its own platform. Both displays show the same station. GPIO 7 is held high when the second display is off, so a connected display ignores the first one's traffic. With two displays, the frame rate drops from about 63 fps to about 34 fps, because each frame is drawn and sent twice. The scrolling stays at the same speed.
 
+## Flashing a release
+
+Each [release](https://github.com/ahammerton/train-departure-display-esp32/releases) has two firmware files:
+
+- `train-display-<version>-full.bin`: for a new board. Flash it over USB at address 0:
+
+  ```sh
+  esptool --chip esp32s3 --port /dev/cu.usbmodemXXXX write-flash 0x0 train-display-<version>-full.bin
+  ```
+
+- `train-display-<version>-update.bin`: for a display that is already running. Upload it under Firmware update on the settings page.
+
+Release firmware has no Wi-Fi network or API key built in, so it starts the setup hotspot (password `train-setup`, shown on the screen). Log in as `admin` with the password `change-me`, then set your Wi-Fi, Rail Data Marketplace key and station, and **change the admin password**: everyone who uses the release firmware starts with the same one.
+
 ## Building
 
 You need the Arduino ESP32 core 3.x and the U8g2 and ArduinoJson (7.x) libraries.
