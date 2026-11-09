@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.7.0 (2026-11-09)
+## 0.7.1 (2026-11-09)
 
-First release of the ESP32-S3 port. The version follows the original Raspberry Pi app's 0.7.0, whose features it matches.
+First release of the ESP32-S3 port. It matches the features of the original Raspberry Pi app's 0.7.0. (The v0.7.0 tag was never released: its automated build failed.)
 
 - Live departures from the Rail Data Marketplace Live Departure Board API (v1.2), with the original app's screens, Dot Matrix fonts, layout and scrolling.
 - Station, destination and platform filters, time offset, operating hours, screen-off hours, rotation, brightness and the other options of the original.

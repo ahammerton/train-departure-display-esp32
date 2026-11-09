@@ -4,7 +4,7 @@
 
 #include "rail.h"
 
-#define FW_VERSION "0.7.0"
+#define FW_VERSION "0.7.1"
 #define HOSTNAME   "train-display"
 
 // Boards: [frontBoard] is shown, the other is filled by the fetch task
