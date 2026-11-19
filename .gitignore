@@ -3,3 +3,4 @@ TrainDisplay/build/
 tools/.venv/
 __pycache__/
 .DS_Store
+CLAUDE.md
